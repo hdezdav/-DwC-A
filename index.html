@@ -377,7 +377,8 @@ async function loadFromGBIF(uuid) {
             source: 'GBIF',
         });
 
-        const endpoint = (meta.endpoints||[]).find(e => e.type === 'DWC_ARCHIVE' || e.url?.endsWith('.zip'));
+        const endpoints = meta.endpoints || [];
+        const endpoint = endpoints.find(e => e.type === 'DWC_ARCHIVE') || endpoints.find(e => e.url?.endsWith('.zip'));
         if (!endpoint) throw new Error('Este dataset de GBIF no tiene un DwC-A disponible para descarga directa.');
 
         setProgress(25, 'Descargando DwC-A desde GBIF...');
@@ -443,14 +444,23 @@ function extractIPTDownloadUrl(baseUrl, html) {
 // ═══════════════════════════════════════════════════════
 async function fetchAndLoadZip(zipUrl, mode='direct') {
     const proxyBase = document.getElementById('proxyInput').value.trim();
-    const finalUrl = (mode === 'proxy' && proxyBase) 
-        ? (proxyBase.endsWith('?') || proxyBase.endsWith('=') ? proxyBase + encodeURIComponent(zipUrl) : `${proxyBase}?url=${encodeURIComponent(zipUrl)}`) 
-        : zipUrl;
+    const proxyUrl = proxyBase ? (proxyBase.endsWith('?') || proxyBase.endsWith('=') ? proxyBase + encodeURIComponent(zipUrl) : `${proxyBase}?url=${encodeURIComponent(zipUrl)}`) : null;
 
     setProgress(30, 'Descargando archivo...');
     try {
-        const resp = await fetch(finalUrl);
-        if (!resp.ok) throw new Error(`HTTP ${resp.status} al descargar el ZIP`);
+        let resp;
+        try {
+            resp = await fetch(zipUrl);
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        } catch (err) {
+            if (proxyUrl) {
+                console.log('Descarga directa falló, intentando con proxy...');
+                resp = await fetch(proxyUrl);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status} a través del proxy`);
+            } else {
+                throw err;
+            }
+        }
 
         const contentLength = resp.headers.get('content-length');
         let buffer;
