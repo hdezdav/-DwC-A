@@ -1,915 +1,826 @@
 <!DOCTYPE html>
-<html lang="es">
+<html class="light" lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Darwin Core Viewer Pro</title>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Visor Darwin Core - BioConvert Pro</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "tertiary-container": "#2c3d4f",
+                    "on-secondary-container": "#035584",
+                    "surface-container-lowest": "#ffffff",
+                    "error": "#ba1a1a",
+                    "primary-fixed": "#c1ecd4",
+                    "on-tertiary-fixed": "#0a1d2d",
+                    "on-surface-variant": "#414844",
+                    "on-secondary-fixed-variant": "#004a75",
+                    "primary-fixed-dim": "#a5d0b9",
+                    "primary": "#012d1d",
+                    "on-surface": "#191c1d",
+                    "surface-container-highest": "#e1e3e4",
+                    "surface-tint": "#3f6653",
+                    "surface-variant": "#e1e3e4",
+                    "on-primary-container": "#86af99",
+                    "on-tertiary": "#ffffff",
+                    "surface-bright": "#f8f9fa",
+                    "outline-variant": "#c1c8c2",
+                    "surface": "#f8f9fa",
+                    "inverse-on-surface": "#f0f1f2",
+                    "error-container": "#ffdad6",
+                    "outline": "#717973",
+                    "tertiary-fixed-dim": "#b6c8df",
+                    "on-primary-fixed": "#002114",
+                    "on-primary-fixed-variant": "#274e3d",
+                    "surface-container": "#edeeef",
+                    "on-error-container": "#93000a",
+                    "secondary-container": "#90c9ff",
+                    "tertiary-fixed": "#d2e4fb",
+                    "surface-container-low": "#f3f4f5",
+                    "on-tertiary-fixed-variant": "#37485b",
+                    "on-primary": "#ffffff",
+                    "on-secondary-fixed": "#001d32",
+                    "on-secondary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "on-tertiary-container": "#96a8bd",
+                    "tertiary": "#162738",
+                    "secondary": "#206393",
+                    "background": "#f8f9fa",
+                    "surface-dim": "#d9dadb",
+                    "inverse-surface": "#2e3132",
+                    "secondary-fixed": "#cee5ff",
+                    "inverse-primary": "#a5d0b9",
+                    "primary-container": "#1b4332",
+                    "secondary-fixed-dim": "#96ccff",
+                    "on-background": "#191c1d",
+                    "surface-container-high": "#e7e8e9"
+                },
+                fontFamily: {
+                    "h1": ["Inter"],
+                    "mono-label": ["Space Grotesk"],
+                    "body-sm": ["Inter"],
+                    "h2": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "h3": ["Inter"]
+                }
+            }
+        }
+    }
+</script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap');
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+    }
+    body { background-color: #f8f9fa; }
+    
+    /* DwC field coloring */
+    .dwc-key   { color: #8b5cf6; } /* violet-500 */
+    .dwc-coord { color: #0ea5e9; } /* sky-500 */
+    .dwc-date  { color: #f97316; } /* orange-500 */
+    .dwc-taxon { color: #10b981; font-style: italic; } /* emerald-500 */
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* Drag & Drop */
+    .drag-over {
+        border-color: #10b981 !important;
+        background-color: #f0fdf4 !important;
+    }
 
-  :root {
-    --bg: #050806;
-    --surface: rgba(17, 22, 17, 0.6);
-    --surface-solid: #111611;
-    --border: rgba(74, 222, 128, 0.15);
-    --border-hover: rgba(74, 222, 128, 0.4);
-    --accent: #4ade80;
-    --accent-hover: #22c55e;
-    --accent2: #86efac;
-    --text: #e2f0e2;
-    --muted: #8b9d8b;
-    --header-bg: rgba(13, 26, 13, 0.85);
-    --row-hover: rgba(74, 222, 128, 0.05);
-    --tag-bg: rgba(74, 222, 128, 0.1);
-  }
-
-  @keyframes fadeInDown {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes pulseGlow {
-    0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4); }
-    70% { box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
-  }
-
-  body {
-    font-family: 'Syne', sans-serif;
-    background: radial-gradient(circle at 15% 50%, rgba(74, 222, 128, 0.06), transparent 35%),
-                radial-gradient(circle at 85% 10%, rgba(134, 239, 172, 0.04), transparent 40%),
-                var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    padding: 2.5rem;
-    overflow-x: hidden;
-  }
-
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 3rem;
-    animation: fadeInDown 0.6s ease-out;
-  }
-
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 1.2rem;
-  }
-
-  .logo {
-    width: 48px; height: 48px;
-    background: linear-gradient(135deg, var(--accent) 0%, #16a34a 100%);
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.5rem;
-    box-shadow: 0 4px 20px rgba(74, 222, 128, 0.25);
-    color: #fff;
-  }
-
-  h1 {
-    font-size: 1.8rem;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-  }
-
-  h1 span { 
-    background: linear-gradient(to right, var(--accent), var(--accent2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-
-  .subtitle {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--muted);
-    margin-top: 4px;
-    letter-spacing: 0.02em;
-  }
-
-  .client-badge {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.65rem;
-    padding: 0.4rem 0.8rem;
-    background: rgba(134, 239, 172, 0.1);
-    color: var(--accent2);
-    border: 1px solid rgba(134, 239, 172, 0.2);
-    border-radius: 999px;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-  }
-  .client-badge::before {
-    content: '';
-    width: 6px; height: 6px;
-    background: var(--accent);
-    border-radius: 50%;
-    box-shadow: 0 0 8px var(--accent);
-  }
-
-  /* Drop Zone */
-  #dropzone {
-    border: 1px solid var(--border);
-    border-radius: 24px;
-    padding: 4.5rem 2rem;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: var(--surface);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-    animation: fadeInUp 0.6s ease-out 0.1s backwards;
-  }
-
-  #dropzone::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse at 50% 0%, rgba(74,222,128,0.08) 0%, transparent 60%);
-    pointer-events: none;
-    transition: opacity 0.3s;
-  }
-
-  #dropzone:hover, #dropzone.drag-over {
-    border-color: var(--accent);
-    transform: translateY(-2px);
-    box-shadow: 0 12px 40px rgba(74, 222, 128, 0.12);
-  }
-  #dropzone:hover::before, #dropzone.drag-over::before { opacity: 1; }
-
-  #dropzone.drag-over { 
-    transform: scale(1.01);
-    border-color: var(--accent2);
-    background: rgba(17, 22, 17, 0.8);
-  }
-
-  .drop-icon {
-    font-size: 3rem;
-    margin-bottom: 1.2rem;
-    display: block;
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
-    transition: transform 0.3s;
-  }
-  #dropzone:hover .drop-icon { transform: translateY(-4px); }
-
-  .drop-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: 0.6rem;
-  }
-
-  .drop-sub {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--muted);
-  }
-
-  .drop-btn {
-    display: inline-block;
-    margin-top: 1.8rem;
-    padding: 0.6rem 1.8rem;
-    background: var(--accent);
-    color: #050a05;
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 4px 12px rgba(74, 222, 128, 0.2);
-  }
-  .drop-btn:hover { 
-    background: var(--accent-hover); 
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(74, 222, 128, 0.3);
-  }
-
-  #fileInput { display: none; }
-
-  /* Stats bar */
-  #statsBar {
-    display: none;
-    gap: 1rem;
-    margin: 1.5rem 0;
-    flex-wrap: wrap;
-    animation: fadeInUp 0.4s ease-out;
-  }
-
-  .stat-pill {
-    background: var(--tag-bg);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 0.4rem 1rem;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.72rem;
-    color: var(--accent2);
-    display: flex; align-items: center; gap: 0.5rem;
-    backdrop-filter: blur(4px);
-  }
-
-  .stat-pill .label { color: var(--muted); }
-
-  /* File tabs */
-  #fileTabs {
-    display: none;
-    gap: 0.6rem;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-    animation: fadeInUp 0.5s ease-out;
-  }
-
-  .tab-btn {
-    padding: 0.4rem 1.2rem;
-    border-radius: 8px;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.75rem;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--muted);
-    cursor: pointer;
-    transition: all 0.2s;
-    backdrop-filter: blur(4px);
-  }
-
-  .tab-btn:hover { background: rgba(74, 222, 128, 0.05); color: var(--text); }
-
-  .tab-btn.active {
-    border-color: var(--accent);
-    color: var(--accent);
-    background: var(--tag-bg);
-    box-shadow: 0 2px 10px rgba(74, 222, 128, 0.1);
-  }
-
-  /* Search + filter bar */
-  #toolbar {
-    display: none;
-    gap: 1rem;
-    margin-bottom: 1.2rem;
-    align-items: center;
-    flex-wrap: wrap;
-    animation: fadeInUp 0.6s ease-out;
-  }
-
-  .search-wrap { position: relative; flex: 1; min-width: 240px; }
-  .search-icon {
-    position: absolute; left: 0.9rem; top: 50%; transform: translateY(-50%);
-    color: var(--muted); font-size: 0.9rem; pointer-events: none;
-  }
-
-  #searchInput {
-    width: 100%;
-    padding: 0.65rem 1rem 0.65rem 2.6rem;
-    background: var(--surface-solid);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-family: 'Space Mono', monospace;
-    font-size: 0.8rem;
-    outline: none;
-    transition: all 0.2s;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
-  }
-  #searchInput:focus { 
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.1), inset 0 2px 4px rgba(0,0,0,0.2);
-  }
-
-  .toolbar-right {
-    display: flex; gap: 0.6rem; align-items: center;
-  }
-
-  .action-btn {
-    padding: 0.65rem 1rem;
-    background: var(--surface-solid);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-family: 'Space Mono', monospace;
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-  }
-  
-  .action-btn:hover { 
-    border-color: var(--accent); 
-    color: var(--accent);
-    background: var(--tag-bg);
-  }
-
-  .action-btn.export {
-    background: rgba(74, 222, 128, 0.1);
-    border-color: rgba(74, 222, 128, 0.3);
-    color: var(--accent);
-  }
-  .action-btn.export:hover {
-    background: rgba(74, 222, 128, 0.2);
-    box-shadow: 0 2px 8px rgba(74, 222, 128, 0.2);
-    transform: translateY(-1px);
-  }
-
-  /* Column selector dropdown */
-  .col-dropdown-wrap { position: relative; }
-
-  #colDropdown {
-    display: none;
-    position: absolute;
-    right: 0;
-    top: calc(100% + 0.5rem);
-    z-index: 100;
-    background: var(--surface-solid);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 0.8rem;
-    max-height: 320px;
-    overflow-y: auto;
-    min-width: 220px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
-  }
-  #colDropdown.open { display: block; animation: fadeInUp 0.2s ease-out; }
-
-  .col-check {
-    display: flex; align-items: center; gap: 0.6rem;
-    padding: 0.4rem 0.5rem;
-    border-radius: 6px;
-    cursor: pointer;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.72rem;
-    color: var(--text);
-    transition: background 0.1s;
-  }
-  .col-check:hover { background: var(--row-hover); }
-  .col-check input { 
-    accent-color: var(--accent); 
-    cursor: pointer; 
-    width: 14px; height: 14px; 
-  }
-
-  /* Table */
-  #tableWrap {
-    display: none;
-    overflow-x: auto;
-    border-radius: 16px;
-    border: 1px solid var(--border);
-    background: var(--surface-solid);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-    animation: fadeInUp 0.7s ease-out;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.8rem;
-  }
-
-  thead th {
-    background: var(--header-bg);
-    padding: 0.8rem 1.2rem;
-    text-align: left;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    white-space: nowrap;
-    cursor: pointer;
-    user-select: none;
-    position: sticky;
-    top: 0;
-    border-bottom: 1px solid var(--border);
-    backdrop-filter: blur(8px);
-    transition: color 0.2s, background 0.2s;
-  }
-
-  thead th:hover { color: var(--accent2); background: rgba(20, 40, 20, 0.9); }
-  thead th .sort-arrow { margin-left: 6px; opacity: 0.3; transition: opacity 0.2s; }
-  thead th.sorted .sort-arrow { opacity: 1; color: var(--accent2); }
-
-  tbody tr {
-    border-bottom: 1px solid var(--border);
-    transition: background 0.15s;
-  }
-  tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: var(--row-hover); }
-
-  tbody td {
-    padding: 0.7rem 1.2rem;
-    color: var(--text);
-    font-family: 'Space Mono', monospace;
-    font-size: 0.72rem;
-    max-width: 250px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  tbody td:hover { white-space: normal; word-break: break-all; }
-
-  .cell-empty { color: var(--muted); font-style: italic; opacity: 0.5; }
-
-  /* DwC field highlighting */
-  .dwc-key { color: #c084fc; font-weight: 700; }
-  .dwc-coord { color: #38bdf8; }
-  .dwc-date { color: #fb923c; }
-  .dwc-taxon { color: var(--accent); }
-
-  /* Pagination */
-  #pagination {
-    display: none;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 1.2rem;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--muted);
-    flex-wrap: wrap;
-    gap: 1rem;
-    animation: fadeInUp 0.8s ease-out;
-  }
-
-  .page-btns { display: flex; gap: 0.4rem; }
-
-  .page-btn {
-    padding: 0.4rem 0.8rem;
-    background: var(--surface-solid);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--muted);
-    cursor: pointer;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.72rem;
-    transition: all 0.2s;
-  }
-
-  .page-btn:hover:not(:disabled), .page-btn.active { 
-    border-color: var(--accent); 
-    color: var(--accent); 
-    background: var(--tag-bg);
-  }
-  .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-
-  /* Error / loading */
-  #status {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.8rem;
-    margin-top: 1.2rem;
-    padding: 0.8rem 1.2rem;
-    border-radius: 10px;
-    display: none;
-    animation: fadeInUp 0.3s ease-out;
-  }
-
-  #status.error { background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.3); color: #fca5a5; }
-  #status.info { background: var(--tag-bg); border: 1px solid var(--border); color: var(--accent2); box-shadow: 0 4px 12px rgba(74, 222, 128, 0.1); }
-
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 8px; height: 8px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f8f9fa; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 </style>
 </head>
-<body>
+<body class="font-body-lg text-on-surface selection:bg-primary-fixed selection:text-on-primary-fixed">
 
-<header>
-  <div class="header-left">
-    <div class="logo">🌿</div>
-    <div>
-      <h1>Darwin Core <span>Viewer Pro</span></h1>
-      <div class="subtitle">// Web-based DwC-A explorer</div>
+<!-- Top Navigation Chrome -->
+<header class="fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 z-50">
+    <div class="flex items-center gap-4">
+        <div class="w-8 h-8 rounded bg-primary-container flex items-center justify-center">
+            <span class="material-symbols-outlined text-on-primary-container" style="font-variation-settings: 'FILL' 1;">biotech</span>
+        </div>
+        <div>
+            <h1 class="text-lg font-black text-emerald-900 leading-tight">BioConvert Pro</h1>
+            <p class="text-[10px] font-mono-label text-slate-500 uppercase tracking-widest">Motor Darwin Core</p>
+        </div>
     </div>
-  </div>
-  <div class="client-badge">
-    ✓ 100% Client-Side Processing
-  </div>
 </header>
 
-<!-- Drop zone -->
-<div id="dropzone" onclick="document.getElementById('fileInput').click()">
-  <span class="drop-icon">📦</span>
-  <div class="drop-title">Arrastra tu archivo .zip aquí</div>
-  <div class="drop-sub">Darwin Core Archive (.zip) • occurrence, taxon, event…</div>
-  <div class="drop-btn">Seleccionar archivo</div>
-</div>
-<input type="file" id="fileInput" accept=".zip">
+<main class="pt-16 min-h-screen">
+    <div class="max-w-5xl mx-auto px-6 py-16 space-y-10">
+        
+        <!-- Hero Header -->
+        <section class="text-center space-y-4">
+            <span class="inline-flex items-center gap-2 px-3 py-1 bg-primary-fixed text-on-primary-fixed-variant text-[10px] font-mono-label uppercase tracking-widest rounded-full mx-auto">
+                <span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">dataset</span> Explorador DwC-A
+            </span>
+            <h2 class="font-h1 text-4xl text-primary font-bold">Visor de Datos Darwin Core</h2>
+            <p class="text-slate-500 text-lg max-w-2xl mx-auto">Explora, filtra y analiza Archivos Darwin Core directamente en tu navegador. Sube tu archivo .zip local o extrae datasets desde IPT y GBIF.</p>
+        </section>
 
-<div id="status"></div>
+        <!-- Input Section -->
+        <section class="space-y-6">
+            <div id="dropzone" class="group relative py-12 border-2 border-dashed border-slate-200 hover:border-emerald-500 bg-white rounded-2xl flex flex-col items-center justify-center transition-all hover:shadow-[0px_4px_30px_rgba(27,67,50,0.08)] cursor-pointer" onclick="document.getElementById('fileInput').click()">
+                <div class="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <span class="material-symbols-outlined text-3xl text-emerald-900" data-icon="cloud_upload">cloud_upload</span>
+                </div>
+                <h3 class="font-h3 text-xl text-primary mb-1">Sube tu Archivo Darwin Core</h3>
+                <p class="text-slate-500 text-sm text-center mb-6">Arrastra y suelta tu archivo .zip aquí, o búscalo en tu computadora.</p>
+                <div class="flex gap-3">
+                    <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-mono-label">MÁX 500MB</span>
+                    <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-mono-label">ZIP</span>
+                </div>
+                
+                <div class="w-full flex items-center gap-4 my-6 px-12">
+                    <div class="h-px flex-1 bg-slate-100"></div>
+                    <span class="text-[10px] font-mono-label text-slate-400 uppercase tracking-widest">O</span>
+                    <div class="h-px flex-1 bg-slate-100"></div>
+                </div>
 
-<!-- File tabs -->
-<div id="fileTabs"></div>
+                <div class="w-full max-w-xl px-4" onclick="event.stopPropagation()">
+                    <div class="relative flex items-center">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="material-symbols-outlined text-slate-400 text-xl">link</span>
+                        </div>
+                        <input id="urlInput" class="block w-full pl-10 pr-24 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-emerald-500 focus:border-emerald-500 transition-all text-slate-700 placeholder:text-slate-400" placeholder="Pega la URL de IPT o el UUID de GBIF..." type="text" onclick="event.stopPropagation()"/>
+                        <button id="fetchBtn" class="absolute right-1.5 top-1.5 bottom-1.5 px-4 bg-primary text-white text-xs font-bold rounded-lg hover:bg-emerald-800 transition-colors uppercase tracking-wider" onclick="event.stopPropagation(); handleURL();">
+                            Cargar
+                        </button>
+                    </div>
+                    <div class="mt-3 flex items-center gap-2 justify-center" onclick="event.stopPropagation()">
+                        <span class="text-slate-400 font-mono-label text-[10px] uppercase">URL del Proxy:</span>
+                        <input id="proxyInput" type="text" value="http://127.0.0.1:8787/" class="w-48 text-[11px] py-1 px-2 border border-slate-200 rounded bg-slate-50 focus:ring-emerald-500 focus:border-emerald-500">
+                    </div>
+                </div>
+            </div>
+            <input type="file" id="fileInput" accept=".zip" class="hidden">
+        </section>
 
-<!-- Stats bar -->
-<div id="statsBar"></div>
+        <!-- Status & Progress -->
+        <div id="status" class="hidden w-full p-4 rounded-xl text-sm font-medium border"></div>
 
-<!-- Toolbar -->
-<div id="toolbar">
-  <div class="search-wrap">
-    <span class="search-icon">🔍</span>
-    <input type="text" id="searchInput" placeholder="Buscar en cualquier campo…">
-  </div>
-  <div class="toolbar-right">
-    <button class="action-btn export" onclick="exportData('csv')">CSV ⬇</button>
-    <button class="action-btn export" onclick="exportData('xlsx')">Excel ⬇</button>
-    <div class="col-dropdown-wrap">
-      <button class="action-btn" id="colToggleBtn">Columnas ▾</button>
-      <div id="colDropdown"></div>
+        <div id="progressWrap" class="hidden w-full bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+            <div class="flex justify-between text-sm mb-2 font-mono-label text-slate-500 uppercase">
+                <span>Progreso</span>
+                <span id="progressLabel">0%</span>
+            </div>
+            <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div id="progressBar" class="h-full bg-primary-container transition-all duration-300" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Meta Card -->
+        <div id="metaCard" class="hidden bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex-col md:flex-row gap-6 items-start">
+            <!-- Populated by JS -->
+        </div>
+
+        <!-- File Tabs & Stats -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div id="fileTabs" class="hidden gap-2 flex-wrap"></div>
+            <div id="statsBar" class="hidden gap-2 flex-wrap"></div>
+        </div>
+
+        <!-- Data Preview -->
+        <section id="previewSection" class="hidden space-y-4">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <h3 class="font-semibold text-xl text-primary">Tabla de Datos</h3>
+                    <span id="statRecordsBadge" class="px-3 py-1 bg-slate-200 text-slate-600 text-[10px] font-bold rounded-full uppercase tracking-tighter">0 Filas</span>
+                </div>
+                
+                <div class="flex items-center gap-3 w-full md:w-auto flex-wrap justify-end">
+                    <div class="relative flex-1 md:w-64 min-w-[200px]">
+                        <span class="absolute inset-y-0 left-3 flex items-center material-symbols-outlined text-slate-400 text-[18px]">search</span>
+                        <input type="text" id="searchInput" placeholder="Buscar en todas las columnas..." class="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-emerald-500 focus:border-emerald-500 text-slate-700">
+                    </div>
+                    <button class="flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm font-medium text-emerald-700 hover:bg-emerald-100 transition-colors" onclick="exportData('csv')">
+                        CSV <span class="material-symbols-outlined text-sm">download</span>
+                    </button>
+                    <button class="flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm font-medium text-emerald-700 hover:bg-emerald-100 transition-colors" onclick="exportData('xlsx')">
+                        Excel <span class="material-symbols-outlined text-sm">download</span>
+                    </button>
+                    <div class="relative">
+                        <button id="colToggleBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:border-emerald-500 transition-colors">
+                            Columnas <span class="material-symbols-outlined text-sm">expand_more</span>
+                        </button>
+                        <div id="colDropdown" class="hidden absolute right-0 top-full mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-lg z-50 max-h-72 overflow-y-auto p-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                <div class="overflow-x-auto max-h-[60vh]">
+                    <table class="w-full text-left border-collapse">
+                        <thead id="tableHead" class="bg-slate-50 border-b border-slate-200 sticky top-0 z-10 shadow-sm"></thead>
+                        <tbody id="tableBody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="pagination" class="hidden flex-wrap items-center justify-between gap-4 py-2 bg-white border border-slate-200 rounded-xl px-4 shadow-sm"></div>
+        </section>
+        
     </div>
-  </div>
-</div>
+</main>
 
-<!-- Table -->
-<div id="tableWrap">
-  <table id="dataTable">
-    <thead id="tableHead"></thead>
-    <tbody id="tableBody"></tbody>
-  </table>
-</div>
-
-<!-- Pagination -->
-<div id="pagination"></div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<!-- SheetJS for client-side Excel export -->
-<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<footer class="border-t border-slate-200 bg-white">
+    <div class="max-w-5xl mx-auto px-8 py-12">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="flex flex-col gap-1 text-center md:text-left">
+                <p class="font-sans text-xs uppercase tracking-widest text-slate-500 font-semibold">© 2026 Desarrollado por VizenLabs</p>
+                <p class="text-[10px] text-slate-400">Optimizado para el Estándar Darwin Core GBIF</p>
+            </div>
+            <div class="flex flex-wrap justify-center gap-6">
+                <a class="font-sans text-xs uppercase tracking-widest text-slate-500 hover:text-emerald-900 transition-opacity" href="#">Docs</a>
+                <a class="font-sans text-xs uppercase tracking-widest text-slate-500 hover:text-emerald-900 transition-opacity" href="#">Términos</a>
+                <a class="font-sans text-xs uppercase tracking-widest text-slate-500 hover:text-emerald-900 transition-opacity" href="#">Privacidad</a>
+            </div>
+        </div>
+    </div>
+</footer>
 
 <script>
-// ── State ───────────────────────────────────────────────
-let allFiles = {};         // filename → [{col:val}]
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let allFiles  = {};
 let currentFile = null;
-let visibleCols = [];
-let allCols = [];
-let filtered = [];
-let sortCol = null, sortDir = 1;
+let visibleCols = [], allCols = [];
+let filtered  = [], sortCol = null, sortDir = 1;
 let page = 0;
 const PAGE_SIZE = 50;
 
-// ── DwC field groups for coloring ────────────────────────
-const DWC_GROUPS = {
-  key: ['occurrenceid','gbifid','cataloguenumber','recordnumber','eventid','locationid','taxonid','materialentityid'],
-  coord: ['decimallatitude','decimallongitude','coordinateuncertaintyinmeters','verbatimlatitude','verbatimlongitude'],
-  date: ['eventdate','dateidentified','modified','year','month','day'],
-  taxon: ['scientificname','species','genus','family','order','class','phylum','kingdom','taxonrank','vernacularname'],
-};
-
-function getColClass(col) {
-  const c = col.toLowerCase().replace(/\s/g,'');
-  if (DWC_GROUPS.key.includes(c)) return 'dwc-key';
-  if (DWC_GROUPS.coord.includes(c)) return 'dwc-coord';
-  if (DWC_GROUPS.date.includes(c)) return 'dwc-date';
-  if (DWC_GROUPS.taxon.includes(c)) return 'dwc-taxon';
-  return '';
-}
-
-// ── UI helpers ───────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
+//  STATUS / PROGRESS
+// ═══════════════════════════════════════════════════════
 function showStatus(msg, type='info') {
-  const el = document.getElementById('status');
-  el.textContent = msg;
-  el.className = type;
-  el.style.display = 'block';
-}
-function hideStatus() { document.getElementById('status').style.display = 'none'; }
-
-// ── Parse CSV ────────────────────────────────────────────
-function parseCSV(text) {
-  const lines = text.split(/\r?\n/).filter(l => l.trim());
-  if (!lines.length) return [];
-  
-  const first = lines[0];
-  const delim = (first.split('\t').length > first.split(',').length) ? '\t' : ',';
-
-  function parseLine(line) {
-    const fields = [];
-    let cur = '', inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (ch === '"') { inQ = !inQ; }
-      else if (ch === delim && !inQ) { fields.push(cur.trim()); cur = ''; }
-      else cur += ch;
+    const el = document.getElementById('status');
+    el.textContent = msg;
+    el.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'border-red-200', 'bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
+    if (type === 'error') {
+        el.classList.add('bg-red-50', 'text-red-700', 'border-red-200');
+    } else {
+        el.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
     }
-    fields.push(cur.trim());
-    return fields;
-  }
+}
+function hideStatus() { document.getElementById('status').classList.add('hidden'); }
 
-  const headers = parseLine(lines[0]).map(h => h.replace(/^"|"$/g,'').trim());
-  const rows = [];
-  for (let i = 1; i < lines.length; i++) {
-    const vals = parseLine(lines[i]);
-    const obj = {};
-    headers.forEach((h, j) => { obj[h] = vals[j] !== undefined ? vals[j].replace(/^"|"$/g,'') : ''; });
-    rows.push(obj);
-  }
-  return rows;
+function setProgress(pct, label) {
+    document.getElementById('progressWrap').classList.remove('hidden');
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressLabel').textContent = label;
+}
+function hideProgress() { document.getElementById('progressWrap').classList.add('hidden'); }
+
+// ═══════════════════════════════════════════════════════
+//  URL HANDLER
+// ═══════════════════════════════════════════════════════
+async function handleURL() {
+    const raw = document.getElementById('urlInput').value.trim();
+    if (!raw) { showStatus('Por favor ingresa una URL primero.', 'error'); return; }
+
+    document.getElementById('fetchBtn').disabled = true;
+    hideStatus();
+    resetViewer();
+
+    try {
+        if (raw.endsWith('.zip') || raw.includes('.zip?')) {
+            await fetchAndLoadZip(raw, 'proxy');
+            return;
+        }
+        const gbifUUID = raw.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+        if (gbifUUID) {
+            await loadFromGBIF(gbifUUID[0]);
+            return;
+        }
+        if (raw.includes('gbif.org/dataset/')) {
+            const uuid = raw.split('/dataset/')[1].split(/[?#]/)[0].trim();
+            await loadFromGBIF(uuid);
+            return;
+        }
+        if (raw.includes('resource?r=') || raw.includes('resource.do?r=')) {
+            await loadFromIPT(raw);
+            return;
+        }
+        showStatus('Formato no reconocido. Intenta con una URL de IPT, UUID de GBIF o un link directo al .zip.', 'error');
+    } finally {
+        document.getElementById('fetchBtn').disabled = false;
+    }
 }
 
-// ── Load ZIP ─────────────────────────────────────────────
-async function loadZip(file) {
-  showStatus('Leyendo archivo y extrayendo datos...', 'info');
-  document.getElementById('dropzone').style.display = 'none';
-  
-  try {
-    const zip = await JSZip.loadAsync(file);
-    const csvFiles = Object.keys(zip.files).filter(n =>
-      (n.endsWith('.csv') || n.endsWith('.txt') || n.endsWith('.tsv')) &&
-      !n.startsWith('__MACOSX')
+// ═══════════════════════════════════════════════════════
+//  GBIF & IPT
+// ═══════════════════════════════════════════════════════
+async function loadFromGBIF(uuid) {
+    setProgress(10, 'Consultando API de GBIF...');
+    try {
+        const metaResp = await fetch(`https://api.gbif.org/v1/dataset/${uuid}`);
+        if (!metaResp.ok) throw new Error(`GBIF devolvió ${metaResp.status}`);
+        const meta = await metaResp.json();
+
+        showMetaCard({
+            title: meta.title,
+            description: (meta.description||'').slice(0,300),
+            records: meta.numConstituents,
+            license: meta.license,
+            source: 'GBIF',
+        });
+
+        const endpoint = (meta.endpoints||[]).find(e => e.type === 'DWC_ARCHIVE' || e.url?.endsWith('.zip'));
+        if (!endpoint) throw new Error('Este dataset de GBIF no tiene un DwC-A disponible para descarga directa.');
+
+        setProgress(25, 'Descargando DwC-A desde GBIF...');
+        await fetchAndLoadZip(endpoint.url, 'direct');
+    } catch(e) {
+        hideProgress();
+        showStatus('Error GBIF: ' + e.message, 'error');
+    }
+}
+
+async function loadFromIPT(iptUrl) {
+    const proxyBase = document.getElementById('proxyInput').value.trim();
+    if (!proxyBase) { showStatus('Configura la URL del proxy debajo del input.', 'error'); return; }
+
+    setProgress(10, 'Buscando enlace de descarga de IPT...');
+    try {
+        const fetchUrl = proxyBase.endsWith('?') || proxyBase.endsWith('=') ? proxyBase + encodeURIComponent(iptUrl) : `${proxyBase}?url=${encodeURIComponent(iptUrl)}`;
+        const pageResp = await fetch(fetchUrl);
+        if (!pageResp.ok) throw new Error(`El proxy devolvió ${pageResp.status}. ¿Está en ejecución?`);
+
+        const html = await pageResp.text();
+        const zipUrl = extractIPTDownloadUrl(iptUrl, html);
+        if (!zipUrl) throw new Error('No se pudo encontrar el enlace de descarga .zip en la página de IPT.');
+
+        const titleMatch = html.match(/<title>([^<]+)<\/title>/i);
+        if (titleMatch) {
+            showMetaCard({ title: titleMatch[1].replace(' - IPT','').trim(), source: 'IPT' });
+        }
+
+        setProgress(25, 'Descargando DwC-A...');
+        await fetchAndLoadZip(zipUrl, 'proxy');
+    } catch(e) {
+        hideProgress();
+        showStatus('Error IPT: ' + e.message, 'error');
+    }
+}
+
+function extractIPTDownloadUrl(baseUrl, html) {
+    const patterns = [
+        /href="([^"]*archive\.do\?r=[^"]+)"/i,
+        /href="([^"]*dwca-download[^"]+)"/i,
+        /href="([^"]*\.zip[^"]*)"/i,
+        /(https?:\/\/[^"'\s]+archive\.do\?r=[^\s"'&]+)/i,
+    ];
+    const base = new URL(baseUrl);
+    for (const pat of patterns) {
+        const m = html.match(pat);
+        if (m) {
+            const href = m[1];
+            if (href.startsWith('http')) return href;
+            return base.origin + (href.startsWith('/') ? href : '/' + href);
+        }
+    }
+    const rParam = new URL(baseUrl).searchParams.get('r');
+    if (rParam) {
+        return base.origin + base.pathname.replace('resource', 'archive.do') + '?r=' + rParam;
+    }
+    return null;
+}
+
+// ═══════════════════════════════════════════════════════
+//  FETCH ZIP
+// ═══════════════════════════════════════════════════════
+async function fetchAndLoadZip(zipUrl, mode='direct') {
+    const proxyBase = document.getElementById('proxyInput').value.trim();
+    const finalUrl = (mode === 'proxy' && proxyBase) 
+        ? (proxyBase.endsWith('?') || proxyBase.endsWith('=') ? proxyBase + encodeURIComponent(zipUrl) : `${proxyBase}?url=${encodeURIComponent(zipUrl)}`) 
+        : zipUrl;
+
+    setProgress(30, 'Descargando archivo...');
+    try {
+        const resp = await fetch(finalUrl);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status} al descargar el ZIP`);
+
+        const contentLength = resp.headers.get('content-length');
+        let buffer;
+
+        if (contentLength) {
+            const total = parseInt(contentLength);
+            const reader = resp.body.getReader();
+            const chunks = [];
+            let received = 0;
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                chunks.push(value);
+                received += value.length;
+                setProgress(30 + Math.round((received / total) * 50), `Descargando... ${Math.round(received/1024)}KB / ${Math.round(total/1024)}KB`);
+            }
+            buffer = new Uint8Array(received);
+            let pos = 0;
+            for (const chunk of chunks) { buffer.set(chunk, pos); pos += chunk.length; }
+        } else {
+            const blob = await resp.blob();
+            buffer = await blob.arrayBuffer();
+            setProgress(75, 'Procesando ZIP...');
+        }
+
+        setProgress(80, 'Leyendo archivos...');
+        await parseZip(buffer);
+    } catch(e) {
+        hideProgress();
+        showStatus('Error de descarga: ' + e.message, 'error');
+    }
+}
+
+// ═══════════════════════════════════════════════════════
+//  ZIP PARSER
+// ═══════════════════════════════════════════════════════
+async function parseZip(buffer) {
+    const zip = await JSZip.loadAsync(buffer);
+    const dataFiles = Object.keys(zip.files).filter(n =>
+        (n.endsWith('.csv') || n.endsWith('.txt') || n.endsWith('.tsv')) &&
+        !n.startsWith('__MACOSX') && !zip.files[n].dir
     );
 
-    if (!csvFiles.length) { 
-      showStatus('No se encontraron archivos CSV/TXT dentro del ZIP.', 'error'); 
-      document.getElementById('dropzone').style.display = 'block';
-      return; 
+    if (!dataFiles.length) {
+        hideProgress(); showStatus('No se encontraron archivos de datos dentro del ZIP.', 'error'); return;
     }
 
     allFiles = {};
-    for (const fname of csvFiles) {
-      const text = await zip.files[fname].async('string');
-      const rows = parseCSV(text);
-      if (rows.length) allFiles[fname] = rows;
+    let i = 0;
+    for (const fname of dataFiles) {
+        setProgress(82 + Math.round((i/dataFiles.length)*15), `Procesando ${fname.split('/').pop()}...`);
+        const text = await zip.files[fname].async('string');
+        const rows = parseCSV(text);
+        if (rows.length) allFiles[fname] = rows;
+        i++;
     }
 
-    if (!Object.keys(allFiles).length) { 
-      showStatus('Los archivos CSV están vacíos.', 'error'); 
-      document.getElementById('dropzone').style.display = 'block';
-      return; 
+    setProgress(100, 'Listo.');
+    setTimeout(hideProgress, 600);
+
+    if (!Object.keys(allFiles).length) {
+        showStatus('Los archivos de datos están vacíos.', 'error'); return;
     }
 
     hideStatus();
     buildTabs();
-
-  } catch(e) {
-    showStatus('Error al leer el ZIP: ' + e.message, 'error');
-    document.getElementById('dropzone').style.display = 'block';
-  }
 }
 
-// ── Tabs ─────────────────────────────────────────────────
-function buildTabs() {
-  const keys = Object.keys(allFiles);
-  const tabsEl = document.getElementById('fileTabs');
-  tabsEl.innerHTML = '';
-  tabsEl.style.display = keys.length > 1 ? 'flex' : 'none';
+function parseCSV(text) {
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) return [];
+    const first = lines[0];
+    const delim = (first.split('\t').length > first.split(',').length) ? '\t' : ',';
 
-  keys.forEach((k, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'tab-btn' + (i === 0 ? ' active' : '');
-    const short = k.split('/').pop();
-    btn.textContent = short + ` (${allFiles[k].length.toLocaleString()})`;
-    btn.onclick = () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      loadFile(k);
-    };
-    tabsEl.appendChild(btn);
-  });
-
-  loadFile(keys[0]);
-}
-
-// ── Load a specific file into the table ──────────────────
-function loadFile(fname) {
-  currentFile = fname;
-  const rows = allFiles[fname];
-  allCols = Object.keys(rows[0]);
-  visibleCols = [...allCols];
-  page = 0;
-  sortCol = null; sortDir = 1;
-  document.getElementById('searchInput').value = '';
-
-  buildColDropdown();
-  applyFilter();
-  updateStats(rows, fname);
-
-  document.getElementById('toolbar').style.display = 'flex';
-  document.getElementById('tableWrap').style.display = 'block';
-}
-
-// ── Column dropdown ───────────────────────────────────────
-function buildColDropdown() {
-  const dd = document.getElementById('colDropdown');
-  dd.innerHTML = '<div style="font-size:0.65rem;color:var(--muted);margin-bottom:0.6rem;font-family:Space Mono,monospace;font-weight:700;letter-spacing:0.05em">MOSTRAR COLUMNAS</div>';
-  allCols.forEach(col => {
-    const label = document.createElement('label');
-    label.className = 'col-check';
-    label.innerHTML = `<input type="checkbox" checked data-col="${col}"> <span>${col}</span>`;
-    label.querySelector('input').addEventListener('change', () => {
-      const checked = [...dd.querySelectorAll('input:checked')].map(i => i.dataset.col);
-      visibleCols = checked;
-      page = 0;
-      renderTable();
-    });
-    dd.appendChild(label);
-  });
-}
-
-document.getElementById('colToggleBtn').addEventListener('click', (e) => {
-  e.stopPropagation();
-  document.getElementById('colDropdown').classList.toggle('open');
-});
-document.addEventListener('click', () => document.getElementById('colDropdown').classList.remove('open'));
-document.getElementById('colDropdown').addEventListener('click', e => e.stopPropagation());
-
-// ── Export functionality (100% Client Side) ──────────────
-function exportData(format) {
-  if (!filtered.length) return;
-
-  showStatus(`Generando ${format.toUpperCase()}... Por favor espera.`, 'info');
-
-  setTimeout(() => {
-    try {
-      // Build pure data payload based on visible columns
-      const exportRows = filtered.map(row => {
-        const out = {};
-        visibleCols.forEach(col => { out[col] = row[col]; });
-        return out;
-      });
-
-      const baseName = currentFile.split('/').pop().replace(/\.[^/.]+$/, "");
-      const fileName = `${baseName}_export_${new Date().getTime()}`;
-
-      if (format === 'csv') {
-        exportCSV(exportRows, fileName);
-      } else if (format === 'xlsx') {
-        exportXLSX(exportRows, fileName);
-      }
-      
-      showStatus('¡Descarga iniciada exitosamente!', 'info');
-      setTimeout(hideStatus, 3000);
-    } catch(err) {
-      showStatus('Error al exportar: ' + err.message, 'error');
+    function parseLine(line) {
+        const fields = []; let cur='', inQ=false;
+        for (let i=0; i<line.length; i++) {
+            const ch = line[i];
+            if (ch==='"') inQ=!inQ;
+            else if (ch===delim && !inQ) { fields.push(cur.trim()); cur=''; }
+            else cur+=ch;
+        }
+        fields.push(cur.trim());
+        return fields;
     }
-  }, 100);
+
+    const headers = parseLine(lines[0]).map(h=>h.replace(/^"|"$/g,'').trim());
+    const rows=[];
+    for (let i=1; i<lines.length; i++) {
+        const vals = parseLine(lines[i]);
+        if (vals.every(v=>!v)) continue;
+        const obj={};
+        headers.forEach((h,j)=>{ obj[h] = (vals[j]!==undefined ? vals[j].replace(/^"|"$/g,'') : ''); });
+        rows.push(obj);
+    }
+    return rows;
+}
+
+// ═══════════════════════════════════════════════════════
+//  META CARD
+// ═══════════════════════════════════════════════════════
+function showMetaCard(info) {
+    const card = document.getElementById('metaCard');
+    card.classList.remove('hidden');
+    card.classList.add('flex');
+    card.innerHTML = `
+        <div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 flex-shrink-0">
+            <span class="material-symbols-outlined text-3xl text-emerald-900">dataset</span>
+        </div>
+        <div class="flex-1">
+            <h3 class="text-xl font-bold text-primary mb-2">${info.title||'Conjunto de Datos'}</h3>
+            ${info.description ? `<p class="text-sm text-slate-500 mb-4 line-clamp-3">${info.description}...</p>` : ''}
+            <div class="flex gap-2 flex-wrap">
+                ${info.source ? `<span class="px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full text-[11px] font-mono-label tracking-wide"><span class="text-emerald-500 mr-1">FUENTE</span> ${info.source}</span>` : ''}
+                ${info.license ? `<span class="px-3 py-1 bg-slate-100 text-slate-700 border border-slate-200 rounded-full text-[11px] font-mono-label tracking-wide"><span class="text-slate-400 mr-1">LICENCIA</span> ${info.license}</span>` : ''}
+                ${info.records ? `<span class="px-3 py-1 bg-blue-50 text-blue-800 border border-blue-200 rounded-full text-[11px] font-mono-label tracking-wide"><span class="text-blue-400 mr-1">REGISTROS</span> ${info.records}</span>` : ''}
+            </div>
+        </div>
+    `;
+}
+
+// ═══════════════════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════════════════
+function buildTabs() {
+    const keys = Object.keys(allFiles);
+    const tabsEl = document.getElementById('fileTabs');
+    tabsEl.innerHTML='';
+    
+    if(keys.length > 1) {
+        tabsEl.classList.remove('hidden');
+        tabsEl.classList.add('flex');
+    } else {
+        tabsEl.classList.add('hidden');
+    }
+
+    keys.forEach((k,i)=>{
+        const btn=document.createElement('button');
+        btn.className = `px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${i===0 ? 'bg-primary-container text-white border-primary-container shadow-md' : 'bg-white text-slate-600 border-slate-200 hover:border-primary-container hover:text-primary-container'}`;
+        btn.textContent = k.split('/').pop()+` (${allFiles[k].length.toLocaleString()})`;
+        btn.onclick=()=>{
+            document.querySelectorAll('#fileTabs button').forEach(b => {
+                b.className = 'px-4 py-2 rounded-lg text-sm font-medium transition-colors border bg-white text-slate-600 border-slate-200 hover:border-primary-container hover:text-primary-container';
+            });
+            btn.className = 'px-4 py-2 rounded-lg text-sm font-medium transition-colors border bg-primary-container text-white border-primary-container shadow-md';
+            loadFileIntoTable(k);
+        };
+        tabsEl.appendChild(btn);
+    });
+    loadFileIntoTable(keys[0]);
+}
+
+// ═══════════════════════════════════════════════════════
+//  EXPORT FUNCTIONALITY
+// ═══════════════════════════════════════════════════════
+function exportData(format) {
+    if (!filtered.length) return;
+
+    showStatus(`Generando ${format.toUpperCase()}... Por favor espera.`, 'info');
+
+    setTimeout(() => {
+        try {
+            const exportRows = filtered.map(row => {
+                const out = {};
+                visibleCols.forEach(col => { out[col] = row[col]; });
+                return out;
+            });
+
+            const baseName = currentFile.split('/').pop().replace(/\.[^/.]+$/, "");
+            const fileName = `${baseName}_export_${new Date().getTime()}`;
+
+            if (format === 'csv') {
+                exportCSV(exportRows, fileName);
+            } else if (format === 'xlsx') {
+                exportXLSX(exportRows, fileName);
+            }
+            
+            showStatus('¡Descarga iniciada exitosamente!', 'info');
+            setTimeout(hideStatus, 3000);
+        } catch(err) {
+            showStatus('Error al exportar: ' + err.message, 'error');
+        }
+    }, 100);
 }
 
 function exportCSV(data, fileName) {
-  const header = visibleCols.map(c => `"${c.replace(/"/g, '""')}"`).join(',');
-  const lines = data.map(row => {
-    return visibleCols.map(col => {
-      const val = row[col] == null ? '' : String(row[col]);
-      return `"${val.replace(/"/g, '""')}"`;
-    }).join(',');
-  });
-  const csvContent = [header, ...lines].join('\n');
-  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' }); // \ufeff for Excel UTF-8 BOM
-  triggerDownload(blob, `${fileName}.csv`);
+    const header = visibleCols.map(c => `"${c.replace(/"/g, '""')}"`).join(',');
+    const lines = data.map(row => {
+        return visibleCols.map(col => {
+            const val = row[col] == null ? '' : String(row[col]);
+            return `"${val.replace(/"/g, '""')}"`;
+        }).join(',');
+    });
+    const csvContent = [header, ...lines].join('\n');
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    triggerDownload(blob, `${fileName}.csv`);
 }
 
 function exportXLSX(data, fileName) {
-  if (typeof XLSX === 'undefined') throw new Error("La librería SheetJS no está cargada");
-  const ws = XLSX.utils.json_to_sheet(data, { header: visibleCols });
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "DwC Data");
-  XLSX.writeFile(wb, `${fileName}.xlsx`);
+    if (typeof XLSX === 'undefined') throw new Error("La librería SheetJS no está cargada");
+    const ws = XLSX.utils.json_to_sheet(data, { header: visibleCols });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "DwC Data");
+    XLSX.writeFile(wb, `${fileName}.xlsx`);
 }
 
 function triggerDownload(blob, fileName) {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 }
 
-// ── Stats bar ─────────────────────────────────────────────
-function updateStats(rows, fname) {
-  const bar = document.getElementById('statsBar');
-  const short = fname.split('/').pop();
-  bar.style.display = 'flex';
-  bar.innerHTML = `
-    <div class="stat-pill"><span class="label">archivo</span> ${short}</div>
-    <div class="stat-pill" id="statRows"><span class="label">registros</span> ${rows.length.toLocaleString()}</div>
-    <div class="stat-pill"><span class="label">columnas totales</span> ${allCols.length}</div>
-  `;
+// ═══════════════════════════════════════════════════════
+//  TABLE SETUP
+// ═══════════════════════════════════════════════════════
+function loadFileIntoTable(fname) {
+    currentFile=fname;
+    allCols=Object.keys(allFiles[fname][0]);
+    visibleCols=[...allCols];
+    page=0; sortCol=null; sortDir=1;
+    document.getElementById('searchInput').value='';
+
+    buildColDropdown();
+    updateStats();
+    applyFilter();
+
+    document.getElementById('previewSection').classList.remove('hidden');
 }
 
-// ── Filter + sort + render ────────────────────────────────
-function applyFilter() {
-  const q = document.getElementById('searchInput').value.toLowerCase();
-  const rows = allFiles[currentFile];
-  filtered = q
-    ? rows.filter(r => visibleCols.some(col => r[col] && r[col].toLowerCase().includes(q)))
-    : [...rows];
+function updateStats() {
+    const rows=allFiles[currentFile];
+    const bar=document.getElementById('statsBar');
+    bar.classList.remove('hidden');
+    bar.classList.add('flex');
+    bar.innerHTML=`
+        <div class="px-3 py-1 bg-white border border-slate-200 rounded-full text-[11px] font-mono-label text-slate-700 tracking-wide"><span class="text-slate-400 mr-1">ARCHIVO</span> ${currentFile.split('/').pop()}</div>
+        <div class="px-3 py-1 bg-white border border-slate-200 rounded-full text-[11px] font-mono-label text-slate-700 tracking-wide"><span class="text-slate-400 mr-1">FILAS</span> ${rows.length.toLocaleString()}</div>
+        <div class="px-3 py-1 bg-white border border-slate-200 rounded-full text-[11px] font-mono-label text-slate-700 tracking-wide"><span class="text-slate-400 mr-1">COLUMNAS</span> ${allCols.length}</div>
+    `;
+}
 
-  if (sortCol !== null) {
-    filtered.sort((a, b) => {
-      const av = a[sortCol] || '', bv = b[sortCol] || '';
-      return av.localeCompare(bv, undefined, {numeric:true}) * sortDir;
+// ═══════════════════════════════════════════════════════
+//  COLUMN DROPDOWN
+// ═══════════════════════════════════════════════════════
+function buildColDropdown() {
+    const dd=document.getElementById('colDropdown');
+    dd.innerHTML='<div class="text-[10px] font-mono-label text-slate-500 uppercase tracking-widest mb-2 px-2">Columnas Visibles</div>';
+    allCols.forEach(col=>{
+        const label=document.createElement('label');
+        label.className='flex items-center gap-3 px-2 py-1.5 hover:bg-slate-50 rounded-lg cursor-pointer text-sm text-slate-700 transition-colors';
+        label.innerHTML=`<input type="checkbox" checked data-col="${col}" class="text-emerald-600 focus:ring-emerald-500 border-slate-300 rounded cursor-pointer"> <span class="truncate">${col}</span>`;
+        label.querySelector('input').addEventListener('change',()=>{
+            visibleCols=[...dd.querySelectorAll('input:checked')].map(i=>i.dataset.col);
+            page=0; renderTable();
+        });
+        dd.appendChild(label);
     });
-  }
-
-  const statRows = document.getElementById('statRows');
-  if (statRows) statRows.innerHTML = `<span class="label">registros</span> ${filtered.length.toLocaleString()}${q ? ' (filtrados)' : ''}`;
-
-  page = 0;
-  renderTable();
 }
 
-document.getElementById('searchInput').addEventListener('input', applyFilter);
+document.getElementById('colToggleBtn').addEventListener('click',e=>{
+    e.stopPropagation();
+    document.getElementById('colDropdown').classList.toggle('hidden');
+});
+document.addEventListener('click',()=>document.getElementById('colDropdown').classList.add('hidden'));
+document.getElementById('colDropdown').addEventListener('click', e => e.stopPropagation());
 
-function renderTable() {
-  const thead = document.getElementById('tableHead');
-  const tbody = document.getElementById('tableBody');
-
-  // Header
-  thead.innerHTML = '<tr>' + visibleCols.map(col => {
-    const cls = getColClass(col);
-    const arrow = sortCol === col ? (sortDir === 1 ? '↑' : '↓') : '↕';
-    const sorted = sortCol === col ? ' sorted' : '';
-    return `<th class="${sorted}" onclick="doSort('${col.replace(/'/g,"\\'")}')">
-      <span class="${cls}">${col}</span><span class="sort-arrow">${arrow}</span>
-    </th>`;
-  }).join('') + '</tr>';
-
-  // Rows
-  const start = page * PAGE_SIZE;
-  const slice = filtered.slice(start, start + PAGE_SIZE);
-
-  tbody.innerHTML = slice.map(row => '<tr>' + visibleCols.map(col => {
-    const val = row[col];
-    const cls = getColClass(col);
-    if (!val || val === '') return `<td class="cell-empty">—</td>`;
-    return `<td title="${val.replace(/"/g,'&quot;')}"><span class="${cls}">${val}</span></td>`;
-  }).join('') + '</tr>').join('');
-
-  renderPagination();
+// ═══════════════════════════════════════════════════════
+//  FILTER + SORT + RENDER
+// ═══════════════════════════════════════════════════════
+const DWC_GROUPS={
+    key:   ['occurrenceid','gbifid','cataloguenumber','recordnumber','eventid','locationid','taxonid'],
+    coord: ['decimallatitude','decimallongitude','coordinateuncertaintyinmeters'],
+    date:  ['eventdate','dateidentified','modified','year','month','day'],
+    taxon: ['scientificname','species','genus','family','order','class','phylum','kingdom','vernacularname'],
+};
+function getColClass(col){
+    const c=col.toLowerCase().replace(/\s/g,'');
+    if (DWC_GROUPS.key.includes(c))   return 'dwc-key';
+    if (DWC_GROUPS.coord.includes(c)) return 'dwc-coord';
+    if (DWC_GROUPS.date.includes(c))  return 'dwc-date';
+    if (DWC_GROUPS.taxon.includes(c)) return 'dwc-taxon font-medium';
+    return '';
 }
 
-function doSort(col) {
-  if (sortCol === col) sortDir *= -1;
-  else { sortCol = col; sortDir = 1; }
-  applyFilter();
-}
-
-function renderPagination() {
-  const total = filtered.length;
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-  const pag = document.getElementById('pagination');
-
-  if (totalPages <= 1) { pag.style.display = 'none'; return; }
-  pag.style.display = 'flex';
-
-  const start = page * PAGE_SIZE + 1;
-  const end = Math.min((page + 1) * PAGE_SIZE, total);
-
-  let btns = '';
-  const range = 2;
-  for (let i = 0; i < totalPages; i++) {
-    if (i === 0 || i === totalPages-1 || Math.abs(i - page) <= range) {
-      btns += `<button class="page-btn${i===page?' active':''}" onclick="goPage(${i})">${i+1}</button>`;
-    } else if (Math.abs(i - page) === range+1) {
-      btns += `<span style="color:var(--muted);padding:0 4px;font-family:Space Mono,monospace;font-size:0.75rem">…</span>`;
+function applyFilter(){
+    const q=document.getElementById('searchInput').value.toLowerCase();
+    const rows=allFiles[currentFile];
+    filtered=q ? rows.filter(r=>Object.values(r).some(v=>v&&v.toLowerCase().includes(q))) : [...rows];
+    if (sortCol!==null){
+        filtered.sort((a,b)=>a[sortCol].localeCompare(b[sortCol],undefined,{numeric:true})*sortDir);
     }
-  }
+    const badge=document.getElementById('statRecordsBadge');
+    if(badge) badge.innerText=`${filtered.length.toLocaleString()} Filas${q?' Filtradas':''}`;
+    page=0; renderTable();
+}
+document.getElementById('searchInput').addEventListener('input',applyFilter);
 
-  pag.innerHTML = `
-    <span>Mostrando ${start.toLocaleString()} – ${end.toLocaleString()} de ${total.toLocaleString()}</span>
-    <div class="page-btns">
-      <button class="page-btn" onclick="goPage(${page-1})" ${page===0?'disabled':''}>← Anterior</button>
-      ${btns}
-      <button class="page-btn" onclick="goPage(${page+1})" ${page===totalPages-1?'disabled':''}>Siguiente →</button>
-    </div>
-  `;
+function renderTable(){
+    const thead=document.getElementById('tableHead');
+    const tbody=document.getElementById('tableBody');
+    thead.innerHTML='<tr>'+visibleCols.map(col=>{
+        const cls=getColClass(col);
+        const arrow=sortCol===col?(sortDir===1?'&uarr;':'&darr;'):'&updownarrow;';
+        return `<th class="px-6 py-4 text-[11px] font-mono-label text-slate-500 uppercase tracking-widest cursor-pointer hover:text-emerald-700 hover:bg-slate-100 select-none whitespace-nowrap transition-colors" onclick="doSort('${col.replace(/'/g,"\\'")}')">
+            <div class="flex items-center gap-1">
+                <span class="${cls}">${col}</span>
+                <span class="text-[14px] ${sortCol===col?'opacity-100 text-emerald-600':'opacity-30'}">${arrow}</span>
+            </div>
+        </th>`;
+    }).join('')+'</tr>';
+
+    const slice=filtered.slice(page*PAGE_SIZE,(page+1)*PAGE_SIZE);
+    tbody.innerHTML=slice.map(row=>'<tr class="hover:bg-slate-50 transition-colors">'+visibleCols.map(col=>{
+        const v=row[col];
+        const cls=getColClass(col);
+        if(!v||v==='') return `<td class="px-6 py-3 text-sm text-slate-400">—</td>`;
+        return `<td class="px-6 py-3 text-sm text-slate-700 whitespace-nowrap max-w-[200px] overflow-hidden text-ellipsis" title="${v.replace(/"/g,'&quot;')}"><span class="${cls}">${v}</span></td>`;
+    }).join('')+'</tr>').join('');
+
+    renderPagination();
 }
 
-function goPage(p) {
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  if (p < 0 || p >= totalPages) return;
-  page = p;
-  renderTable();
-  document.getElementById('tableWrap').scrollIntoView({behavior:'smooth', block:'start'});
+function doSort(col){
+    if(sortCol===col) sortDir*=-1; else{sortCol=col;sortDir=1;}
+    applyFilter();
 }
 
-// ── Drag & drop ───────────────────────────────────────────
-const dz = document.getElementById('dropzone');
-dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
-dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
-dz.addEventListener('drop', e => {
-  e.preventDefault();
-  dz.classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
-  if (file && file.name.endsWith('.zip')) loadZip(file);
-  else showStatus('Por favor sube un archivo .zip válido.', 'error');
+function renderPagination(){
+    const total=filtered.length, totalPages=Math.ceil(total/PAGE_SIZE);
+    const pag=document.getElementById('pagination');
+    if(totalPages<=1){
+        pag.classList.add('hidden');
+        pag.classList.remove('flex');
+        return;
+    }
+    pag.classList.remove('hidden');
+    pag.classList.add('flex');
+    const s=page*PAGE_SIZE+1, e=Math.min((page+1)*PAGE_SIZE,total);
+    let btns='';
+    for(let i=0;i<totalPages;i++){
+        if(i===0||i===totalPages-1||Math.abs(i-page)<=2) {
+            btns+=`<button class="w-8 h-8 flex items-center justify-center rounded-md text-sm font-medium transition-colors ${i===page?'bg-primary-container text-white shadow-sm':'bg-white text-slate-600 hover:bg-slate-100'}" onclick="goPage(${i})">${i+1}</button>`;
+        } else if(Math.abs(i-page)===3) {
+            btns+=`<span class="px-1 text-slate-400 text-sm">…</span>`;
+        }
+    }
+    pag.innerHTML=`<span class="text-[11px] text-slate-500 font-mono-label uppercase tracking-widest">${s.toLocaleString()} – ${e.toLocaleString()} de ${total.toLocaleString()}</span>
+        <div class="flex items-center gap-1">
+            <button class="w-8 h-8 flex items-center justify-center bg-white text-slate-600 rounded-md hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" onclick="goPage(${page-1})" ${page===0?'disabled':''}>&larr;</button>
+            ${btns}
+            <button class="w-8 h-8 flex items-center justify-center bg-white text-slate-600 rounded-md hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" onclick="goPage(${page+1})" ${page===totalPages-1?'disabled':''}>&rarr;</button>
+        </div>`;
+}
+
+function goPage(p){
+    const tp=Math.ceil(filtered.length/PAGE_SIZE);
+    if(p<0||p>=tp)return;
+    page=p; renderTable();
+    document.getElementById('previewSection').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ═══════════════════════════════════════════════════════
+//  DROP ZONE / FILE INPUT
+// ═══════════════════════════════════════════════════════
+const dz=document.getElementById('dropzone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop',e=>{
+    e.preventDefault(); dz.classList.remove('drag-over');
+    const f=e.dataTransfer.files[0];
+    if(f&&f.name.endsWith('.zip')) loadFromFile(f);
+    else showStatus('Por favor sube un archivo .zip válido.','error');
+});
+document.getElementById('fileInput').addEventListener('change',e=>{
+    if(e.target.files[0]) loadFromFile(e.target.files[0]);
 });
 
-document.getElementById('fileInput').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (file) loadZip(file);
+async function loadFromFile(file){
+    resetViewer();
+    setProgress(20,'Leyendo archivo local...');
+    const buf=await file.arrayBuffer();
+    await parseZip(buf);
+}
+
+// ═══════════════════════════════════════════════════════
+//  RESET
+// ═══════════════════════════════════════════════════════
+function resetViewer(){
+    allFiles={}; currentFile=null; visibleCols=[]; allCols=[]; filtered=[]; sortCol=null; sortDir=1; page=0;
+    document.getElementById('metaCard').classList.add('hidden');
+    document.getElementById('metaCard').classList.remove('flex');
+    
+    document.getElementById('fileTabs').classList.add('hidden');
+    document.getElementById('fileTabs').classList.remove('flex');
+    
+    document.getElementById('statsBar').classList.add('hidden');
+    document.getElementById('statsBar').classList.remove('flex');
+    
+    document.getElementById('previewSection').classList.add('hidden');
+    
+    document.getElementById('tableHead').innerHTML='';
+    document.getElementById('tableBody').innerHTML='';
+}
+
+// Enter key on URL input
+document.getElementById('urlInput').addEventListener('keydown',e=>{
+    if(e.key==='Enter') handleURL();
 });
 </script>
 </body>
