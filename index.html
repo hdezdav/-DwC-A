@@ -156,9 +156,9 @@
                             Cargar
                         </button>
                     </div>
-                    <div class="mt-3 flex items-center gap-2 justify-center" onclick="event.stopPropagation()">
+                    <div class="mt-3 hidden items-center gap-2 justify-center" onclick="event.stopPropagation()">
                         <span class="text-slate-400 font-mono-label text-[10px] uppercase">URL del Proxy:</span>
-                        <input id="proxyInput" type="text" value="http://127.0.0.1:8787/" class="w-48 text-[11px] py-1 px-2 border border-slate-200 rounded bg-slate-50 focus:ring-emerald-500 focus:border-emerald-500">
+                        <input id="proxyInput" type="text" value="https://api.codetabs.com/v1/proxy?quest=" class="w-48 text-[11px] py-1 px-2 border border-slate-200 rounded bg-slate-50 focus:ring-emerald-500 focus:border-emerald-500">
                     </div>
                 </div>
             </div>
@@ -236,7 +236,7 @@
     <div class="max-w-5xl mx-auto px-8 py-12">
         <div class="flex flex-col md:flex-row justify-between items-center gap-8">
             <div class="flex flex-col gap-1 text-center md:text-left">
-                <p class="font-sans text-xs uppercase tracking-widest text-slate-500 font-semibold">© 2026 Desarrollado por VizenLabs</p>
+                <p class="font-sans text-xs uppercase tracking-widest text-slate-500 font-semibold">© 2026 Desarrollado por <a href="https://vizenlabs.com.co/" target="_blank" class="text-emerald-600 hover:text-emerald-800 transition-colors">VizenLabs</a></p>
                 <p class="text-[10px] text-slate-400">Optimizado para el Estándar Darwin Core GBIF</p>
             </div>
             <div class="flex flex-wrap justify-center gap-6">
@@ -384,7 +384,7 @@ function extractIPTDownloadUrl(baseUrl, html) {
     for (const pat of patterns) {
         const m = html.match(pat);
         if (m) {
-            const href = m[1];
+            const href = m[1].replace(/&amp;/g, '&');
             if (href.startsWith('http')) return href;
             return base.origin + (href.startsWith('/') ? href : '/' + href);
         }
