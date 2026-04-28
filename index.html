@@ -4,6 +4,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Visor Darwin Core - BioConvert Pro</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔬</text></svg>">
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -240,13 +241,54 @@
                 <p class="text-[10px] text-slate-400">Optimizado para el Estándar Darwin Core GBIF</p>
             </div>
             <div class="flex flex-wrap justify-center gap-6">
-                <a class="font-sans text-xs uppercase tracking-widest text-slate-500 hover:text-emerald-900 transition-opacity" href="#">Docs</a>
-                <a class="font-sans text-xs uppercase tracking-widest text-slate-500 hover:text-emerald-900 transition-opacity" href="#">Términos</a>
-                <a class="font-sans text-xs uppercase tracking-widest text-slate-500 hover:text-emerald-900 transition-opacity" href="#">Privacidad</a>
+                <button onclick="document.getElementById('termsModal').showModal()" class="font-sans text-xs uppercase tracking-widest text-slate-500 hover:text-emerald-900 transition-opacity">Términos</button>
+                <button onclick="document.getElementById('privacyModal').showModal()" class="font-sans text-xs uppercase tracking-widest text-slate-500 hover:text-emerald-900 transition-opacity">Privacidad</button>
             </div>
         </div>
     </div>
 </footer>
+
+<!-- Modals -->
+<dialog id="termsModal" class="p-0 rounded-2xl shadow-2xl border-0 backdrop:bg-slate-900/50 backdrop:backdrop-blur-sm w-full max-w-2xl bg-white">
+    <div class="p-8 space-y-6 text-slate-700 font-body-lg text-sm">
+        <div class="flex justify-between items-center mb-2">
+            <h2 class="text-2xl font-bold text-primary font-h1">Términos de Uso</h2>
+            <button onclick="document.getElementById('termsModal').close()" class="text-slate-400 hover:text-slate-600 transition-colors outline-none focus:ring-2 focus:ring-emerald-500 rounded">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <p><strong>BioConvert Pro - Visor Darwin Core</strong> es una herramienta de uso libre y gratuito, diseñada para facilitar la exploración y análisis de conjuntos de datos de biodiversidad bajo el estándar Darwin Core (DwC-A).</p>
+        <ul class="list-disc pl-5 space-y-2 text-slate-600">
+            <li><strong>Uso Gratuito:</strong> El uso de esta herramienta no tiene ningún costo. Cualquier persona puede utilizarla con fines académicos, investigativos o comerciales sin restricciones.</li>
+            <li><strong>Procesamiento Local:</strong> Toda la carga, procesamiento y visualización de los archivos se realiza exclusivamente de forma local dentro de su navegador. Sus datos no son enviados, almacenados ni procesados en ningún servidor remoto gestionado por nosotros.</li>
+            <li><strong>Disponibilidad y Garantía:</strong> La herramienta se proporciona "tal cual", sin garantías de ningún tipo. No nos hacemos responsables de pérdidas de datos, interpretaciones erróneas o interrupciones en el servicio (como fallos en el proxy de terceros utilizado para peticiones CORS).</li>
+        </ul>
+        <div class="pt-4 flex justify-end border-t border-slate-100">
+            <button onclick="document.getElementById('termsModal').close()" class="px-6 py-2 bg-slate-100 text-slate-700 font-medium rounded-lg hover:bg-slate-200 transition-colors">Cerrar</button>
+        </div>
+    </div>
+</dialog>
+
+<dialog id="privacyModal" class="p-0 rounded-2xl shadow-2xl border-0 backdrop:bg-slate-900/50 backdrop:backdrop-blur-sm w-full max-w-2xl bg-white">
+    <div class="p-8 space-y-6 text-slate-700 font-body-lg text-sm">
+        <div class="flex justify-between items-center mb-2">
+            <h2 class="text-2xl font-bold text-primary font-h1">Política de Privacidad</h2>
+            <button onclick="document.getElementById('privacyModal').close()" class="text-slate-400 hover:text-slate-600 transition-colors outline-none focus:ring-2 focus:ring-emerald-500 rounded">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <p>En <strong>BioConvert Pro</strong> nos tomamos muy en serio su privacidad. Nuestro enfoque es 100% "Privacy by Design" (Privacidad desde el diseño).</p>
+        <ul class="list-disc pl-5 space-y-2 text-slate-600">
+            <li><strong>Cero Recopilación de Datos:</strong> No almacenamos, leemos ni compartimos los archivos Darwin Core (.zip) ni los datos contenidos en ellos.</li>
+            <li><strong>Ejecución del Lado del Cliente:</strong> Todo el procesamiento, filtrado y exportación de datos ocurre directamente en la memoria de su navegador (Client-Side). Una vez que cierre la pestaña, los datos se eliminarán de la memoria RAM temporal.</li>
+            <li><strong>Conexiones Externas:</strong> La única información que sale de su navegador es la necesaria para realizar descargas externas (como peticiones a GBIF o IPT), las cuales pueden pasar a través de un Proxy público si no se utiliza un archivo local. Le recomendamos utilizar archivos locales para conjuntos de datos altamente sensibles.</li>
+            <li><strong>Cookies y Rastreo:</strong> No utilizamos cookies de rastreo, analíticas ni herramientas de publicidad de terceros que comprometan su privacidad.</li>
+        </ul>
+        <div class="pt-4 flex justify-end border-t border-slate-100">
+            <button onclick="document.getElementById('privacyModal').close()" class="px-6 py-2 bg-slate-100 text-slate-700 font-medium rounded-lg hover:bg-slate-200 transition-colors">Cerrar</button>
+        </div>
+    </div>
+</dialog>
 
 <script>
 // ═══════════════════════════════════════════════════════
@@ -293,7 +335,7 @@ async function handleURL() {
     resetViewer();
 
     try {
-        if (raw.endsWith('.zip') || raw.includes('.zip?')) {
+        if (raw.endsWith('.zip') || raw.includes('.zip?') || raw.includes('archive.do?r=') || raw.includes('archive?r=')) {
             await fetchAndLoadZip(raw, 'proxy');
             return;
         }
@@ -339,7 +381,7 @@ async function loadFromGBIF(uuid) {
         if (!endpoint) throw new Error('Este dataset de GBIF no tiene un DwC-A disponible para descarga directa.');
 
         setProgress(25, 'Descargando DwC-A desde GBIF...');
-        await fetchAndLoadZip(endpoint.url, 'direct');
+        await fetchAndLoadZip(endpoint.url, 'proxy');
     } catch(e) {
         hideProgress();
         showStatus('Error GBIF: ' + e.message, 'error');
